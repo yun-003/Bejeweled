@@ -171,7 +171,7 @@ namespace Bejeweled
             int gridWidth = 8;
             int gridHeight = 8;
             int padding = 1;
-            int numberOfImages = 6+1;
+            int numberOfImages = 6; // 假设有6种不同的图片资源
 
             int gridPanelWidth = (buttonSize + padding) * gridWidth - padding;
             int gridPanelHeight = gridPanelWidth;
@@ -185,11 +185,28 @@ namespace Bejeweled
             this.Controls.Add(gridPanel);
 
             Random random = new Random();
+            string lastImageName = null; // 用于记录上一个使用的图片名称
+            string[] images = Enumerable.Range(1, numberOfImages)
+                                          .Select(i => $"button_image{i}")
+                                          .ToArray(); // 所有图片资源名称的数组
 
             for (int row = 0; row < gridHeight; row++)
             {
                 for (int col = 0; col < gridWidth; col++)
                 {
+                    string resourceName;
+                    if (random.NextDouble() < 0.05 && lastImageName != null) // 有5%的概率使用上一个图片
+                    {
+                        resourceName = lastImageName;
+                    }
+                    else // 否则随机选择一个新的图片
+                    {
+                        resourceName = images[random.Next(images.Length)];
+                        lastImageName = resourceName; // 更新上一个使用的图片名称
+                    }
+
+                    Image image = Properties.Resources.ResourceManager.GetObject(resourceName) as Image;
+
                     Button button = new Button
                     {
                         Size = new Size(buttonSize, buttonSize),
@@ -197,26 +214,17 @@ namespace Bejeweled
                         BackColor = Color.Transparent // 设置按钮背景色为透明
                     };
 
-                    // 随机选择一个图片资源名称
-                    string resourceName = $"button_image{new Random().Next(1, numberOfImages+1)}";
-
-                    // 从资源管理器获取资源对象，并显式转换为Image类型
-                    Image image = Properties.Resources.ResourceManager.GetObject(resourceName) as Image;
-
                     if (image != null)
                     {
-                        // 正确地设置按钮的背景图片
                         button.BackgroundImageLayout = ImageLayout.Zoom; // 根据需要设置图片布局
                         button.BackgroundImage = image;
                     }
                     else
                     {
-                        // 如果资源不存在，显示错误消息
                         MessageBox.Show($"Resource named {resourceName} not found.", "Resource Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
 
                     gridPanel.Controls.Add(button);
-                    // 可以为按钮添加事件处理，例如点击事件
                     button.Click += Button_Click;
                 }
             }
