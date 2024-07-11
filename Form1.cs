@@ -53,6 +53,9 @@ namespace Bejeweled
         private bool isGameStarted = false;
         private bool isGameMusicStarted = false;
 
+        private Button firstClickedButton;
+        private Button secondClickedButton;
+
         private IWavePlayer waveOut;
         private Mp3FileReader mp3FileReader;
 
@@ -464,8 +467,32 @@ namespace Bejeweled
         private void Button_Click(object sender, EventArgs e)
         {
             // 按钮点击事件处理
-            Button clickedButton = sender as Button;
-            MessageBox.Show($"Button at position ({clickedButton.Location.X}, {clickedButton.Location.Y}) was clicked.");
+            Button clickedButton =(Button)sender;
+            // MessageBox.Show($"Button at position ({clickedButton.Location.X}, {clickedButton.Location.Y}) was clicked.");
+            if (firstClickedButton == null)
+            {
+                firstClickedButton = clickedButton;
+            }
+            else if (secondClickedButton == null && firstClickedButton != clickedButton)
+            {
+                secondClickedButton = clickedButton;
+                if(Math.Abs(firstClickedButton.Location.X - secondClickedButton.Location.X) == 51 && Math.Abs(firstClickedButton.Location.Y - secondClickedButton.Location.Y) == 0)
+                {
+                    Button tempX = new Button();
+                    tempX.Location = firstClickedButton.Location;
+                    firstClickedButton.Location = secondClickedButton.Location;
+                    secondClickedButton.Location = tempX.Location;
+                }
+                else if (Math.Abs(firstClickedButton.Location.Y - secondClickedButton.Location.Y) == 51 && Math.Abs(firstClickedButton.Location.X - secondClickedButton.Location.X) == 0)
+                {
+                    Button tempY = new Button();
+                    tempY.Location = firstClickedButton.Location;
+                    firstClickedButton.Location = secondClickedButton.Location;
+                    secondClickedButton.Location = tempY.Location;
+                }
+                firstClickedButton = null;
+                secondClickedButton = null;
+            }
         }
 
     }
