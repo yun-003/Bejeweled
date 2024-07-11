@@ -368,15 +368,56 @@ namespace Bejeweled
             {
                 int gridY = button.Location.Y / buttonSize;
                 int gridX = button.Location.X / buttonSize;
-
                 return grid[gridY, gridX] == null;
             }).ToList();
 
-            // 删除
+            int maxSize = 70;
+            int interval = 10;
+            int increaseStep = 2;
+
             foreach (var button in controlsToRemove)
             {
-                gridPanel.Controls.Remove(button);
-                button.Dispose();
+                // 创建动画 Timer
+                Timer animationTimer = new Timer();
+                animationTimer.Interval = interval;
+                bool isIncreasing = true;
+
+                animationTimer.Tick += (sender, e) =>
+                {
+                    if (isIncreasing)
+                    {
+                        // 放大动画
+                        if (button.Width < maxSize)
+                        {
+                            int step = increaseStep;
+                            button.Width += step;
+                            button.Height += step;
+                            button.Left -= (step / 2);
+                            button.Top -= (step / 2);
+                        }
+                        else
+                        {
+                            isIncreasing = false;
+                        }
+                    }
+                    else
+                    {
+                        // 缩小动画
+                        int step = increaseStep;
+                        button.Width -= step;
+                        button.Height -= step;
+                        button.Left += (step / 2);
+                        button.Top += (step / 2);
+
+                        if (button.Width <= 0 || button.Height <= 0)
+                        {
+                            animationTimer.Stop();
+                            gridPanel.Controls.Remove(button);
+                            button.Dispose();
+                        }
+                    }
+                };
+                animationTimer.Start(); // 开始动画
             }
         }
 
