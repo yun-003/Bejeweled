@@ -87,6 +87,7 @@
     <Content Include="image\button_image4.jpg" />
     <Content Include="image\button_image5.jpg" />
     <Content Include="image\button_image6.jpg" />
+    <None Include="Resources\button_image77.bmp" />
     <None Include="Properties\image\button_image6.jpg" />
     <None Include="Properties\image\button_image5.jpg" />
     <None Include="Properties\image\button_image4.jpg" />

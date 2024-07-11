@@ -171,6 +171,7 @@ namespace Bejeweled
             int gridWidth = 8;
             int gridHeight = 8;
             int padding = 1;
+            int numberOfImages = 6+1;
 
             int gridPanelWidth = (buttonSize + padding) * gridWidth - padding;
             int gridPanelHeight = gridPanelWidth;
@@ -183,6 +184,8 @@ namespace Bejeweled
             };
             this.Controls.Add(gridPanel);
 
+            Random random = new Random();
+
             for (int row = 0; row < gridHeight; row++)
             {
                 for (int col = 0; col < gridWidth; col++)
@@ -191,8 +194,27 @@ namespace Bejeweled
                     {
                         Size = new Size(buttonSize, buttonSize),
                         Location = new Point(col * (buttonSize + padding), row * (buttonSize + padding)),
-                        Text = "Button"
+                        BackColor = Color.Transparent // 设置按钮背景色为透明
                     };
+
+                    // 随机选择一个图片资源名称
+                    string resourceName = $"button_image{new Random().Next(1, numberOfImages+1)}";
+
+                    // 从资源管理器获取资源对象，并显式转换为Image类型
+                    Image image = Properties.Resources.ResourceManager.GetObject(resourceName) as Image;
+
+                    if (image != null)
+                    {
+                        // 正确地设置按钮的背景图片
+                        button.BackgroundImageLayout = ImageLayout.Zoom; // 根据需要设置图片布局
+                        button.BackgroundImage = image;
+                    }
+                    else
+                    {
+                        // 如果资源不存在，显示错误消息
+                        MessageBox.Show($"Resource named {resourceName} not found.", "Resource Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+
                     gridPanel.Controls.Add(button);
                     // 可以为按钮添加事件处理，例如点击事件
                     button.Click += Button_Click;
