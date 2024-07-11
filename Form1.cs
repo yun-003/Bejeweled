@@ -353,7 +353,11 @@ namespace Bejeweled
                     }
                 }
 
-                UpdateGridDisplay();
+                // 更新界面显示
+                if (anyMatchFound)
+                {
+                    UpdateGridDisplay();
+                }
 
             } while (anyMatchFound);
         }
@@ -464,36 +468,45 @@ namespace Bejeweled
             }
         }
 
+        int firstx, firsty;
+        int secondx, secondy;
+
         private void Button_Click(object sender, EventArgs e)
         {
-            // 按钮点击事件处理
-            Button clickedButton =(Button)sender;
-            // MessageBox.Show($"Button at position ({clickedButton.Location.X}, {clickedButton.Location.Y}) was clicked.");
+            Button clickedButton = (Button)sender;
+            int buttonX = clickedButton.Location.X / buttonSize;
+            int buttonY = clickedButton.Location.Y / buttonSize;
+
             if (firstClickedButton == null)
             {
                 firstClickedButton = clickedButton;
+                firstx = buttonX;
+                firsty = buttonY;
             }
             else if (secondClickedButton == null && firstClickedButton != clickedButton)
             {
                 secondClickedButton = clickedButton;
-                if(Math.Abs(firstClickedButton.Location.X - secondClickedButton.Location.X) == 51 && Math.Abs(firstClickedButton.Location.Y - secondClickedButton.Location.Y) == 0)
+                secondx = buttonX;
+                secondy = buttonY;
+
+                if ((Math.Abs(firstx - secondx) == 1 && Math.Abs(firsty - secondy) == 0) ||
+                    (Math.Abs(firstx - secondx) == 0 && Math.Abs(firsty - secondy) == 1))
                 {
-                    Button tempX = new Button();
-                    tempX.Location = firstClickedButton.Location;
+                    var tempLocation = firstClickedButton.Location;
                     firstClickedButton.Location = secondClickedButton.Location;
-                    secondClickedButton.Location = tempX.Location;
+                    secondClickedButton.Location = tempLocation;
+
+                    string tempGridValue = grid[firsty, firstx];
+                    grid[firsty, firstx] = grid[secondy, secondx];
+                    grid[secondy, secondx] = tempGridValue;
+
+                    CheckAndEliminateMatches();
                 }
-                else if (Math.Abs(firstClickedButton.Location.Y - secondClickedButton.Location.Y) == 51 && Math.Abs(firstClickedButton.Location.X - secondClickedButton.Location.X) == 0)
-                {
-                    Button tempY = new Button();
-                    tempY.Location = firstClickedButton.Location;
-                    firstClickedButton.Location = secondClickedButton.Location;
-                    secondClickedButton.Location = tempY.Location;
-                }
+
                 firstClickedButton = null;
                 secondClickedButton = null;
+                firstx = firsty = secondx = secondy = 0;
             }
         }
-
     }
 }
