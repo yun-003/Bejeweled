@@ -61,6 +61,16 @@ namespace Bejeweled.Properties {
         }
         
         /// <summary>
+        ///   查找 System.Byte[] 类型的本地化资源。
+        /// </summary>
+        public static byte[] blackgroundmusic {
+            get {
+                object obj = ResourceManager.GetObject("blackgroundmusic", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
         ///   查找 System.Drawing.Bitmap 类型的本地化资源。
         /// </summary>
         public static System.Drawing.Bitmap button_image1 {

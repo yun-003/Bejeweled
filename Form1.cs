@@ -8,6 +8,9 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
+using System.IO;
+using NAudio.Wave;
+
 namespace Bejeweled
 {
     public partial class Bejeweled : Form
@@ -18,11 +21,11 @@ namespace Bejeweled
 
             //InitializeGrid();
 
-            // 创建FlowLayoutPanel用于放置控制元素
+            // 创建FlowLayoutPanel放置button -<
             Panel controlPanel = new Panel
             {
                 Dock = DockStyle.Left,
-                Width = 200, // 控制面板的宽度
+                Width = 200,
                 BorderStyle = BorderStyle.FixedSingle
             };
             this.Controls.Add(controlPanel);
@@ -44,6 +47,57 @@ namespace Bejeweled
 
         private int score = 0;
         private bool isGameStarted = false;
+        private bool isGameMusicStarted = false;
+
+        private IWavePlayer waveOut;
+        private Mp3FileReader mp3FileReader;
+
+        private void PlayMusic()
+        {
+            string currentDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            string musicPath = Path.Combine(currentDirectory, "..\\..\\Properties\\music\\blackgroundmusic.mp3");
+
+            if (!File.Exists(musicPath))
+            {
+                MessageBox.Show("The MP3 file does not exist.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            mp3FileReader = new Mp3FileReader(musicPath);
+
+            if (waveOut == null)
+            {
+                waveOut = new WaveOutEvent();
+            }
+
+            if (!isGameMusicStarted) 
+            {
+                waveOut.PlaybackStopped += (sender, e) =>
+                {
+                    // 重新播放
+                    mp3FileReader?.Dispose();
+                    mp3FileReader = new Mp3FileReader(musicPath);
+                    waveOut.Init(mp3FileReader);
+                    waveOut.Play();
+                    //isGameMusicStarted = true;
+                };
+            }
+            
+            waveOut.Init(mp3FileReader);
+            waveOut.Play();
+            isGameMusicStarted = true;
+        }
+
+        private void StopMusic()
+        {
+            if (waveOut != null)
+            {
+                waveOut.Stop();
+                waveOut.Dispose();
+                mp3FileReader?.Dispose();
+                isGameMusicStarted = false;
+            }
+        }
 
         private void UpdateScoreDisplay()
         {
@@ -52,7 +106,7 @@ namespace Bejeweled
 
         private void InitializeLabels(Panel panel)
         {
-            // 添加分数标签
+            // 分数标签
             labelScore = new Label
             {
                 Text = "Score: 0",
@@ -61,7 +115,7 @@ namespace Bejeweled
             };
             panel.Controls.Add(labelScore);
 
-            // 添加倒计时标签
+            // 倒计时标签
             labelCountdown = new Label
             {
                 Text = "Time: 60",
@@ -73,7 +127,7 @@ namespace Bejeweled
 
         private void InitializeButtons(Panel panel)
         {
-            // 添加开始按钮
+            // 开始button
             btnStart = new Button
             {
                 Text = "Start",
@@ -83,7 +137,7 @@ namespace Bejeweled
             btnStart.Click += BtnStart_Click;
             panel.Controls.Add(btnStart);
 
-            // 添加重新开始按钮
+            // 重新开始button
             btnRestart = new Button
             {
                 Text = "Restart",
@@ -108,25 +162,30 @@ namespace Bejeweled
                 score = 0;
                 UpdateScoreDisplay();
                 timerCountdown.Start();
-                isGameStarted = true; // 标记游戏已经开始
+                isGameStarted = true;
                 InitializeGrid();
+                if(!isGameMusicStarted)
+                {
+                    isGameMusicStarted = true;
+                    PlayMusic();
+                }
             }
             else
             {
-                // 游戏已经开始，弹出消息框
                 MessageBox.Show("Game has already started!");
             }
         }
 
         private void BtnRestart_Click(object sender, EventArgs e)
         {
-            isGameStarted = false; // 重置游戏开始状态
+            isGameStarted = false;
             score = 0;
             labelCountdown.Text = "Time: 60";
             timerCountdown.Stop();
             UpdateScoreDisplay();
-            ClearGrid(); // 重新开始时清除网格
-            InitializeGrid(); // 然后重新初始化网格
+            ClearGrid();
+            InitializeGrid();
+            StopMusic();
         }
 
         private void TimerCountdown_Tick(object sender, EventArgs e)
@@ -171,7 +230,7 @@ namespace Bejeweled
             int gridWidth = 8;
             int gridHeight = 8;
             int padding = 1;
-            int numberOfImages = 6; // 假设有6种不同的图片资源
+            int numberOfImages = 6;
 
             int gridPanelWidth = (buttonSize + padding) * gridWidth - padding;
             int gridPanelHeight = gridPanelWidth;
