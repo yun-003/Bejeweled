@@ -44,6 +44,10 @@ namespace Bejeweled
         private Timer timerCountdown;
 
         private Panel gridPanel; // 8x8网格的Panel
+        private int buttonSize;
+        private int gridHeight;
+        private int gridWidth;
+        string[,] grid = new string[8, 8];
 
         private int score = 0;
         private bool isGameStarted = false;
@@ -85,7 +89,7 @@ namespace Bejeweled
             
             waveOut.Init(mp3FileReader);
             waveOut.Play();
-            isGameMusicStarted = true;
+            isGameMusicStarted = false;
         }
 
         private void StopMusic()
@@ -118,7 +122,7 @@ namespace Bejeweled
             // 倒计时标签
             labelCountdown = new Label
             {
-                Text = "Time: 60",
+                Text = "Time: 60000",
                 AutoSize = true,
                 Location = new Point(10, 40)
             };
@@ -164,7 +168,10 @@ namespace Bejeweled
                 timerCountdown.Start();
                 isGameStarted = true;
                 InitializeGrid();
-                if(!isGameMusicStarted)
+
+                CheckAndEliminateMatches();
+
+                if (!isGameMusicStarted)
                 {
                     isGameMusicStarted = true;
                     PlayMusic();
@@ -180,11 +187,11 @@ namespace Bejeweled
         {
             isGameStarted = false;
             score = 0;
-            labelCountdown.Text = "Time: 60";
+            labelCountdown.Text = "Time: 60000";
             timerCountdown.Stop();
             UpdateScoreDisplay();
             ClearGrid();
-            InitializeGrid();
+            //InitializeGrid();
             StopMusic();
         }
 
@@ -226,9 +233,9 @@ namespace Bejeweled
                 gridPanel.Dispose();
             }
 
-            int buttonSize = 50;
-            int gridWidth = 8;
-            int gridHeight = 8;
+            buttonSize = 50;
+            gridWidth = 8;
+            gridHeight = 8;
             int padding = 1;
             int numberOfImages = 6;
 
@@ -264,6 +271,8 @@ namespace Bejeweled
                         lastImageName = resourceName; // 更新上一个使用的图片名称
                     }
 
+                    grid[row, col] = resourceName;
+
                     Image image = Properties.Resources.ResourceManager.GetObject(resourceName) as Image;
 
                     Button button = new Button
@@ -286,6 +295,118 @@ namespace Bejeweled
                     gridPanel.Controls.Add(button);
                     button.Click += Button_Click;
                 }
+            }
+        }
+
+        private void CheckAndEliminateMatches()
+        {
+            bool anyMatchFound;
+            do
+            {
+                anyMatchFound = false;
+                int matchCount;
+
+                // 检查行
+                for (int row = 0; row < gridHeight; row++)
+                {
+                    for (int col = 0; col < gridWidth - 2; col++)
+                    {
+                        if (grid[row, col] != null && IsMatchInRow(row, col))
+                        {
+                            matchCount = 3;
+                            while (col + matchCount < gridWidth 
+                                && grid[row, col + matchCount] != null 
+                                && grid[row, col] == grid[row, col + matchCount])
+                            {
+                                matchCount++;
+                            }
+                            anyMatchFound = true;
+                            EliminateRowMatches(row, col, matchCount);
+                            AddScore(matchCount);
+                            break;
+                        }
+                    }
+                }
+
+                // 检查列
+                for (int col = 0; col < gridWidth; col++)
+                {
+                    for (int row = 0; row < gridHeight - 2; row++)
+                    {
+                        if (grid[row, col] != null && IsMatchInColumn(col, row))
+                        {
+                            matchCount = 3;
+                            while (row + matchCount < gridHeight
+                                && grid[row + matchCount, col] != null
+                                && grid[row, col] == grid[row + matchCount, col])
+                            {
+                                matchCount++;
+                            }
+                            anyMatchFound = true;
+                            EliminateColumnMatches(col, row, matchCount);
+                            AddScore(matchCount);
+                            break;
+                        }
+                    }
+                }
+
+                UpdateGridDisplay();
+
+            } while (anyMatchFound);
+        }
+
+        private void AddScore(int matchCount)
+        {
+            int scoreToAdd = (int)Math.Pow(2, matchCount - 2);
+            score += scoreToAdd;
+            UpdateScoreDisplay();
+        }
+
+        private void UpdateGridDisplay()
+        {
+            var controlsToRemove = gridPanel.Controls.OfType<Button>().Where(button =>
+            {
+                int gridY = button.Location.Y / buttonSize;
+                int gridX = button.Location.X / buttonSize;
+
+                return grid[gridY, gridX] == null;
+            }).ToList();
+
+            // 删除
+            foreach (var button in controlsToRemove)
+            {
+                gridPanel.Controls.Remove(button);
+                button.Dispose();
+            }
+        }
+
+        private bool IsMatchInRow(int row, int col)
+        {
+            return grid[row, col] != null &&
+                   grid[row, col] == grid[row, col + 1] &&
+                   grid[row, col] == grid[row, col + 2];
+        }
+
+        private bool IsMatchInColumn(int col, int row)
+        {
+            return grid[row, col] != null &&
+                   grid[row, col] == grid[row + 1, col] &&
+                   grid[row, col] == grid[row + 2, col];
+        }
+
+        private void EliminateRowMatches(int row, int startCol, int count)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                grid[row, startCol + i] = null; // 标记为null，表示消除
+            }
+        }
+
+        private void EliminateColumnMatches(int col, int startRow, int count)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                grid[startRow + i, col] = null; // 同上
             }
         }
 
