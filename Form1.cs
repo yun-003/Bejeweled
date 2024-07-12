@@ -35,6 +35,8 @@ namespace Bejeweled
         private Mp3FileReader mp3FileReader;
         private List<string> musicFiles = new List<string>();
         private int currentSongIndex = 0;
+        private List<string> backgroundFiles = new List<string>();
+        private int currentBackgroundIndex = 0;
 
         private int score = 0;
         private bool isGameStarted = false;
@@ -61,6 +63,12 @@ namespace Bejeweled
             musicFiles.Add("blackgroundmusic1.mp3");
             musicFiles.Add("blackgroundmusic2.mp3");
             musicFiles.Add("blackgroundmusic3.mp3");
+
+            backgroundFiles.Add("background1.jpg");
+            backgroundFiles.Add("background2.jpg");
+            backgroundFiles.Add("background3.jpg");
+            backgroundFiles.Add("background4.jpg");
+            backgroundFiles.Add("background5.jpg");
 
             // 创建FlowLayoutPanel放置button -<
             Panel controlPanel = new Panel
@@ -274,7 +282,20 @@ namespace Bejeweled
 
         private void BtnNextbackground_Click(object sender, EventArgs e)
         {
+            currentBackgroundIndex = (currentBackgroundIndex + 1) % backgroundFiles.Count;
 
+            string currentDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            string backgroundFilePath = Path.Combine(currentDirectory, "..\\..\\Properties\\background\\" + backgroundFiles[currentBackgroundIndex]);
+
+            if (File.Exists(backgroundFilePath))
+            {
+                this.BackgroundImage = Image.FromFile(backgroundFilePath);
+                this.BackgroundImageLayout = ImageLayout.Stretch; // 或者选择适合的布局方式
+            }
+            else
+            {
+                MessageBox.Show("Background image file does not exist.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         private void TimerCountdown_Tick(object sender, EventArgs e)
