@@ -41,9 +41,17 @@ namespace Bejeweled
 
         private Button firstClickedButton;
         private Button secondClickedButton;
- 
         int firstx, firsty;
         int secondx, secondy;
+
+        private Timer swapTimer;
+        private Button firstSwapButton;
+        private Button secondSwapButton;
+        private Point firstSwapButtonOriginalLocation;
+        private Point secondSwapButtonOriginalLocation;
+        private int swapStep = 5;
+        private int swapSteps = 0;
+
 
         public Bejeweled()
         {
@@ -66,6 +74,10 @@ namespace Bejeweled
             InitializeLabels(controlPanel);
             InitializeButtons(controlPanel);
             InitializeTimer();
+
+            swapTimer = new Timer();
+            swapTimer.Interval = 20; // 设置动画的刷新间隔
+            swapTimer.Tick += SwapTimer_Tick;
 
             //InitializeGrid(controlPanel);
         }
@@ -561,33 +573,68 @@ namespace Bejeweled
                 if ((Math.Abs(firstx - secondx) == 1 && Math.Abs(firsty - secondy) == 0) ||
                     (Math.Abs(firstx - secondx) == 0 && Math.Abs(firsty - secondy) == 1))
                 {
-                    var tempLocation = firstClickedButton.Location;
-                    firstClickedButton.Location = secondClickedButton.Location;
-                    secondClickedButton.Location = tempLocation;
+                    firstSwapButton = firstClickedButton;
+                    secondSwapButton = secondClickedButton;
+                    firstSwapButtonOriginalLocation = firstSwapButton.Location;
+                    secondSwapButtonOriginalLocation = secondSwapButton.Location;
+                    swapSteps = 0;
 
-                    string tempGridValue = grid[firsty, firstx];
-                    grid[firsty, firstx] = grid[secondy, secondx];
-                    grid[secondy, secondx] = tempGridValue;
-
-                    CheckAndEliminateMatches();
-
-                    if(grid[firsty, firstx] != null && grid[secondy, secondx] != null)
-                    {
-                        var tempLocationNext = firstClickedButton.Location;
-                        firstClickedButton.Location = secondClickedButton.Location;
-                        secondClickedButton.Location = tempLocationNext;
-
-                        string tempGridValueNext = grid[firsty, firstx];
-                        grid[firsty, firstx] = grid[secondy, secondx];
-                        grid[secondy, secondx] = tempGridValueNext;
-                    }
+                    swapTimer.Start();
                 }
-
-                firstClickedButton = null;
-                secondClickedButton = null;
-                firstx = firsty = secondx = secondy = 0;
+                else
+                {
+                    ResetClickedButtons();
+                }
             }
         }
+
+        private void SwapTimer_Tick(object sender, EventArgs e)
+        {
+            if (swapSteps < buttonSize / swapStep)
+            {
+                // 计算每步移动的距离
+                int stepX = (secondSwapButtonOriginalLocation.X - firstSwapButtonOriginalLocation.X) / (buttonSize / swapStep);
+                int stepY = (secondSwapButtonOriginalLocation.Y - firstSwapButtonOriginalLocation.Y) / (buttonSize / swapStep);
+
+                // 移动按钮位置
+                firstSwapButton.Location = new Point(firstSwapButton.Location.X + stepX, firstSwapButton.Location.Y + stepY);
+                secondSwapButton.Location = new Point(secondSwapButton.Location.X - stepX, secondSwapButton.Location.Y - stepY);
+
+                swapSteps++;
+            }
+            else
+            {
+                firstSwapButton.Location = secondSwapButtonOriginalLocation;
+                secondSwapButton.Location = firstSwapButtonOriginalLocation;
+
+                string tempGridValue = grid[firsty, firstx];
+                grid[firsty, firstx] = grid[secondy, secondx];
+                grid[secondy, secondx] = tempGridValue;
+
+                CheckAndEliminateMatches();
+
+                if (grid[firsty, firstx] != null && grid[secondy, secondx] != null)
+                {
+                    firstSwapButton.Location = firstSwapButtonOriginalLocation;
+                    secondSwapButton.Location = secondSwapButtonOriginalLocation;
+
+                    tempGridValue = grid[firsty, firstx];
+                    grid[firsty, firstx] = grid[secondy, secondx];
+                    grid[secondy, secondx] = tempGridValue;
+                }
+
+                swapTimer.Stop();
+                ResetClickedButtons();
+            }
+        }
+
+        private void ResetClickedButtons()
+        {
+            firstClickedButton = null;
+            secondClickedButton = null;
+            firstx = firsty = secondx = secondy = 0;
+        }
+
 
 
     }
