@@ -15,6 +15,32 @@ namespace Bejeweled
 {
     public partial class Bejeweled : Form
     {
+        private Label labelScore;
+        private Label labelCountdown;
+        private Button btnStart;
+        private Button btnRestart;
+        private Timer timerCountdown;
+
+        private Panel gridPanel; // 8x8网格的Panel
+        private int buttonSize;
+        private int gridHeight;
+        private int gridWidth;
+        private int padding;
+        private string[,] grid = new string[8, 8];
+
+        private bool isGameMusicStarted = false;
+        private IWavePlayer waveOut;
+        private Mp3FileReader mp3FileReader;
+
+        private int score = 0;
+        private bool isGameStarted = false;
+
+        private Button firstClickedButton;
+        private Button secondClickedButton;
+ 
+        int firstx, firsty;
+        int secondx, secondy;
+
         public Bejeweled()
         {
             InitializeComponent();
@@ -37,27 +63,9 @@ namespace Bejeweled
             //InitializeGrid(controlPanel);
         }
 
-        private Label labelScore;
-        private Label labelCountdown;
-        private Button btnStart;
-        private Button btnRestart;
-        private Timer timerCountdown;
 
-        private Panel gridPanel; // 8x8网格的Panel
-        private int buttonSize;
-        private int gridHeight;
-        private int gridWidth;
-        string[,] grid = new string[8, 8];
 
-        private int score = 0;
-        private bool isGameStarted = false;
-        private bool isGameMusicStarted = false;
 
-        private Button firstClickedButton;
-        private Button secondClickedButton;
-
-        private IWavePlayer waveOut;
-        private Mp3FileReader mp3FileReader;
 
         private void PlayMusic()
         {
@@ -239,7 +247,7 @@ namespace Bejeweled
             buttonSize = 50;
             gridWidth = 8;
             gridHeight = 8;
-            int padding = 1;
+            padding = 1;
             int numberOfImages = 6;
 
             int gridPanelWidth = (buttonSize + padding) * gridWidth - padding;
@@ -430,6 +438,9 @@ namespace Bejeweled
 
         private bool IsMatchInRow(int row, int col)
         {
+            // 数组越界
+            if (col >= gridWidth - 2) return false;
+
             return grid[row, col] != null &&
                    grid[row, col] == grid[row, col + 1] &&
                    grid[row, col] == grid[row, col + 2];
@@ -437,6 +448,8 @@ namespace Bejeweled
 
         private bool IsMatchInColumn(int col, int row)
         {
+            if (row >= gridHeight - 2) return false;
+
             return grid[row, col] != null &&
                    grid[row, col] == grid[row + 1, col] &&
                    grid[row, col] == grid[row + 2, col];
@@ -468,9 +481,6 @@ namespace Bejeweled
             }
         }
 
-        int firstx, firsty;
-        int secondx, secondy;
-
         private void Button_Click(object sender, EventArgs e)
         {
             Button clickedButton = (Button)sender;
@@ -501,6 +511,17 @@ namespace Bejeweled
                     grid[secondy, secondx] = tempGridValue;
 
                     CheckAndEliminateMatches();
+
+                    if(grid[firsty, firstx] != null && grid[secondy, secondx] != null)
+                    {
+                        var tempLocationNext = firstClickedButton.Location;
+                        firstClickedButton.Location = secondClickedButton.Location;
+                        secondClickedButton.Location = tempLocationNext;
+
+                        string tempGridValueNext = grid[firsty, firstx];
+                        grid[firsty, firstx] = grid[secondy, secondx];
+                        grid[secondy, secondx] = tempGridValueNext;
+                    }
                 }
 
                 firstClickedButton = null;
@@ -508,5 +529,6 @@ namespace Bejeweled
                 firstx = firsty = secondx = secondy = 0;
             }
         }
+
     }
 }
