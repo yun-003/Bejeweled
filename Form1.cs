@@ -19,6 +19,8 @@ namespace Bejeweled
         private Label labelCountdown;
         private Button btnStart;
         private Button btnRestart;
+        private Button btnNextMusic;
+        private Button btnNextBackground;
         private Timer timerCountdown;
 
         private Panel gridPanel; // 8x8网格的Panel
@@ -31,6 +33,8 @@ namespace Bejeweled
         private bool isGameMusicStarted = false;
         private IWavePlayer waveOut;
         private Mp3FileReader mp3FileReader;
+        private List<string> musicFiles = new List<string>();
+        private int currentSongIndex = 0;
 
         private int score = 0;
         private bool isGameStarted = false;
@@ -46,6 +50,9 @@ namespace Bejeweled
             InitializeComponent();
 
             //InitializeGrid();
+            musicFiles.Add("blackgroundmusic1.mp3");
+            musicFiles.Add("blackgroundmusic2.mp3");
+            musicFiles.Add("blackgroundmusic3.mp3");
 
             // 创建FlowLayoutPanel放置button -<
             Panel controlPanel = new Panel
@@ -63,14 +70,10 @@ namespace Bejeweled
             //InitializeGrid(controlPanel);
         }
 
-
-
-
-
         private void PlayMusic()
         {
             string currentDirectory = AppDomain.CurrentDomain.BaseDirectory;
-            string musicPath = Path.Combine(currentDirectory, "..\\..\\Properties\\music\\blackgroundmusic.mp3");
+            string musicPath = Path.Combine(currentDirectory, "..\\..\\Properties\\music\\blackgroundmusic1.mp3");
 
             if (!File.Exists(musicPath))
             {
@@ -101,6 +104,28 @@ namespace Bejeweled
             waveOut.Init(mp3FileReader);
             waveOut.Play();
             isGameMusicStarted = false;
+        }
+
+        private void PlayNextSong()
+        {
+            if (musicFiles.Count > 0)
+            {
+                string currentDirectory = AppDomain.CurrentDomain.BaseDirectory;
+                string musicPath = Path.Combine(currentDirectory, "..\\..\\Properties\\music\\" + musicFiles[currentSongIndex]);
+
+                if (File.Exists(musicPath))
+                {
+                    mp3FileReader = new Mp3FileReader(musicPath);
+                    waveOut = new WaveOutEvent();
+                    waveOut.Init(mp3FileReader);
+                    waveOut.Play();
+                    isGameMusicStarted = true;
+                }
+                else
+                {
+                    MessageBox.Show("The MP3 file does not exist.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
         }
 
         private void StopMusic()
@@ -161,6 +186,26 @@ namespace Bejeweled
             };
             btnRestart.Click += BtnRestart_Click;
             panel.Controls.Add(btnRestart);
+
+            // NextMusic
+            btnNextMusic = new Button
+            {
+                Text = "NextMusic",
+                Size = new Size(180, 50),
+                Location = new Point(10, 370)
+            };
+            btnNextMusic.Click += BtnNextMusict_Click;
+            panel.Controls.Add(btnNextMusic);
+
+            // btnNextBackground
+            btnNextBackground = new Button
+            {
+                Text = "Nextblackground",
+                Size = new Size(180, 50),
+                Location = new Point(10, 430)
+            };
+            btnNextBackground.Click += BtnNextbackground_Click;
+            panel.Controls.Add(btnNextBackground);
         }
 
         private void InitializeTimer()
@@ -204,6 +249,20 @@ namespace Bejeweled
             ClearGrid();
             //InitializeGrid();
             StopMusic();
+        }
+
+        private void BtnNextMusict_Click(object sender, EventArgs e)
+        {
+            StopMusic();
+
+            currentSongIndex = (currentSongIndex + 1) % musicFiles.Count;
+
+            PlayNextSong();
+        }
+
+        private void BtnNextbackground_Click(object sender, EventArgs e)
+        {
+
         }
 
         private void TimerCountdown_Tick(object sender, EventArgs e)
@@ -529,6 +588,7 @@ namespace Bejeweled
                 firstx = firsty = secondx = secondy = 0;
             }
         }
+
 
     }
 }
