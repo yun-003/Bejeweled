@@ -55,12 +55,15 @@ namespace Bejeweled
         private int swapStep = 5;
         private int swapSteps = 0;
 
+        private int timeBoosterCount = 1;
+        //private int scoreBoosterCount = 1;
+
+        private bool isPaused = false;
 
         public Bejeweled()
         {
             InitializeComponent();
 
-            //InitializeGrid();
             musicFiles.Add("blackgroundmusic1.mp3");
             musicFiles.Add("blackgroundmusic2.mp3");
             musicFiles.Add("blackgroundmusic3.mp3");
@@ -71,7 +74,6 @@ namespace Bejeweled
             backgroundFiles.Add("background4.jpg");
             backgroundFiles.Add("background5.jpg");
 
-            // 创建FlowLayoutPanel放置button -<
             Panel controlPanel = new Panel
             {
                 Dock = DockStyle.Left,
@@ -85,10 +87,8 @@ namespace Bejeweled
             InitializeTimer();
 
             swapTimer = new Timer();
-            swapTimer.Interval = 20; // 设置动画的刷新间隔
+            swapTimer.Interval = 20;
             swapTimer.Tick += SwapTimer_Tick;
-
-            //InitializeGrid(controlPanel);
         }
 
         private void PlayMusic()
@@ -167,7 +167,6 @@ namespace Bejeweled
 
         private void InitializeLabels(Panel panel)
         {
-            // 分数标签
             labelScore = new Label
             {
                 Text = "Score: 0",
@@ -176,10 +175,9 @@ namespace Bejeweled
             };
             panel.Controls.Add(labelScore);
 
-            // 倒计时标签
             labelCountdown = new Label
             {
-                Text = "Time: 60000",
+                Text = "Time: 60",
                 AutoSize = true,
                 Location = new Point(10, 40)
             };
@@ -188,7 +186,6 @@ namespace Bejeweled
 
         private void InitializeButtons(Panel panel)
         {
-            // 开始button
             btnStart = new Button
             {
                 Text = "Start",
@@ -198,7 +195,6 @@ namespace Bejeweled
             btnStart.Click += BtnStart_Click;
             panel.Controls.Add(btnStart);
 
-            // 重新开始button
             btnRestart = new Button
             {
                 Text = "Restart",
@@ -208,7 +204,6 @@ namespace Bejeweled
             btnRestart.Click += BtnRestart_Click;
             panel.Controls.Add(btnRestart);
 
-            // NextMusic
             btnNextMusic = new Button
             {
                 Text = "NextMusic",
@@ -218,7 +213,6 @@ namespace Bejeweled
             btnNextMusic.Click += BtnNextMusict_Click;
             panel.Controls.Add(btnNextMusic);
 
-            // btnNextBackground
             btnNextBackground = new Button
             {
                 Text = "Nextblackground",
@@ -227,6 +221,161 @@ namespace Bejeweled
             };
             btnNextBackground.Click += BtnNextbackground_Click;
             panel.Controls.Add(btnNextBackground);
+
+            Button btnTimeBooster = new Button
+            {
+                Text = "Time Booster",
+                Size = new Size(60, 60),
+                Location = new Point(10, 250)
+            };
+            btnTimeBooster.Click += BtnTimeBooster_Click;
+            panel.Controls.Add(btnTimeBooster);
+
+            Button btnScoreBooster = new Button
+            {
+                Text = "Score Booster",
+                Size = new Size(60, 60),
+                Location = new Point(80, 250)
+            };
+            //btnScoreBooster.Click += BtnScoreBooster_Click;
+            panel.Controls.Add(btnScoreBooster);
+
+            Button btnNull = new Button
+            {
+                Text = "Null",
+                Size = new Size(40, 40),
+                Location = new Point(150, 260)
+            };
+            panel.Controls.Add(btnNull);
+
+            // 充值button
+            Button btnRecharge = new Button
+            {
+                Text = "Recharge",
+                Size = new Size(120, 40),
+                Location = new Point(40, 320)
+            };
+            btnRecharge.Click += BtnRecharge_Click;
+            panel.Controls.Add(btnRecharge);
+
+            // 暂停button
+            Button btnPause = new Button
+            {
+                Text = "Pause",
+                Size = new Size(180, 50),
+                Location = new Point(10, 190)
+            };
+            btnPause.Click += BtnPause_Click;
+            panel.Controls.Add(btnPause);
+        }
+
+        private void BtnPause_Click(object sender, EventArgs e)
+        {
+            if (isGameStarted && !isPaused)
+            {
+                timerCountdown.Stop();
+                isPaused = true;
+
+                DialogResult result = MessageBox.Show("Game is paused. Click '确定' to resume.", "Pause Confirmation", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                if (result == DialogResult.OK)
+                {
+                    ResumeGame();
+                }
+            }
+        }
+
+        private void ResumeGame()
+        {
+            if (isPaused)
+            {
+                timerCountdown.Start();
+                isPaused = false;
+            }
+        }
+
+        private void BtnRecharge_Click(object sender, EventArgs e)
+        {
+            string input = InputBox("Recharge", "Please enter the code to recharge:", "我是菜鸡");
+
+            if (input == "我是菜鸡")
+            {
+                timeBoosterCount++;
+                //scoreBoosterCount++;
+                MessageBox.Show("Recharge successful! You have received 1 additional booster for each type.");
+            }
+            else
+            {
+                MessageBox.Show("Invalid code, recharge failed!");
+            }
+        }
+
+        private string InputBox(string title, string promptText, string defaultValue)
+        {
+            Form inputForm = new Form
+            {
+                Width = 300,
+                Height = 150,
+                FormBorderStyle = FormBorderStyle.FixedDialog,
+                Text = title,
+                StartPosition = FormStartPosition.CenterScreen
+            };
+
+            Label prompt = new Label
+            {
+                Left = 10,
+                Top = 10,
+                Width = 280,
+                Text = promptText
+            };
+
+            TextBox inputBox = new TextBox
+            {
+                Left = 10,
+                Top = 40,
+                Width = 280,
+                Text = defaultValue
+            };
+
+            Button confirmation = new Button
+            {
+                Left = 50,
+                Top = 70,
+                Width = 75,
+                Text = "OK",
+                DialogResult = DialogResult.OK
+            };
+
+            Button cancel = new Button
+            {
+                Left = 160,
+                Top = 70,
+                Width = 75,
+                Text = "Cancel",
+                DialogResult = DialogResult.Cancel
+            };
+
+            inputForm.Controls.Add(prompt);
+            inputForm.Controls.Add(inputBox);
+            inputForm.Controls.Add(confirmation);
+            inputForm.Controls.Add(cancel);
+
+            return inputForm.ShowDialog() == DialogResult.OK ? inputBox.Text : null;
+        }
+
+        private void BtnTimeBooster_Click(object sender, EventArgs e)
+        {
+            if (timeBoosterCount > 0)
+            {
+                timerCountdown.Interval = 1000;
+                int newTimeLeft = 20 + int.Parse(labelCountdown.Text.Split(':')[1].Trim());
+                labelCountdown.Text = $"Time: {newTimeLeft}";
+                timeBoosterCount--;
+            }
+            else
+            {
+                MessageBox.Show("Time Booster is out of stock!");
+            }
         }
 
         private void InitializeTimer()
@@ -264,7 +413,7 @@ namespace Bejeweled
         {
             isGameStarted = false;
             score = 0;
-            labelCountdown.Text = "Time: 60000";
+            labelCountdown.Text = "Time: 60";
             timerCountdown.Stop();
             UpdateScoreDisplay();
             ClearGrid();
@@ -291,7 +440,7 @@ namespace Bejeweled
             if (File.Exists(backgroundFilePath))
             {
                 this.BackgroundImage = Image.FromFile(backgroundFilePath);
-                this.BackgroundImageLayout = ImageLayout.Stretch; // 或者选择适合的布局方式
+                this.BackgroundImageLayout = ImageLayout.Stretch;
             }
             else
             {
@@ -301,17 +450,14 @@ namespace Bejeweled
 
         private void TimerCountdown_Tick(object sender, EventArgs e)
         {
-            // 每次计时器触发时，时间减 1
             int timeLeft = int.Parse(labelCountdown.Text.Split(':')[1].Trim()) - 1;
 
-            // 更新时间标签
             labelCountdown.Text = $"Time: {timeLeft}";
 
-            // 检查时间是否已经用完
             if (timeLeft <= 0)
             {
                 timerCountdown.Stop();
-                isGameStarted = false; // 游戏结束，重置状态
+                isGameStarted = false;
                 var result = MessageBox.Show(
                     "Time's up! Final Score: " + score + ".\n" +
                     "Do you want to restart the game?",
@@ -323,7 +469,7 @@ namespace Bejeweled
                 }
                 else if (result == DialogResult.No)
                 {
-                    ClearGrid(); // 清除网格
+                    ClearGrid();
                     Application.Exit();
                 }
             }
@@ -355,7 +501,7 @@ namespace Bejeweled
             this.Controls.Add(gridPanel);
 
             Random random = new Random();
-            string lastImageName = null; // 用于记录上一个使用的图片名称
+            string lastImageName = null;
 
             if (images == null)
             {
@@ -373,10 +519,10 @@ namespace Bejeweled
                     {
                         resourceName = lastImageName;
                     }
-                    else // 否则随机选择一个新的图片
+                    else
                     {
                         resourceName = images[random.Next(images.Length)];
-                        lastImageName = resourceName; // 更新上一个使用的图片名称
+                        lastImageName = resourceName;
                     }
 
                     grid[row, col] = resourceName;
@@ -387,12 +533,12 @@ namespace Bejeweled
                     {
                         Size = new Size(buttonSize, buttonSize),
                         Location = new Point(col * (buttonSize + padding), row * (buttonSize + padding)),
-                        BackColor = Color.Transparent // 设置按钮背景色为透明
+                        BackColor = Color.Transparent
                     };
 
                     if (image != null)
                     {
-                        button.BackgroundImageLayout = ImageLayout.Zoom; // 根据需要设置图片布局
+                        button.BackgroundImageLayout = ImageLayout.Zoom;
                         button.BackgroundImage = image;
                     }
                     else
@@ -414,7 +560,6 @@ namespace Bejeweled
                 anyMatchFound = false;
                 int matchCount;
 
-                // 检查行
                 for (int row = 0; row < gridHeight; row++)
                 {
                     for (int col = 0; col < gridWidth - 2; col++)
@@ -436,7 +581,6 @@ namespace Bejeweled
                     }
                 }
 
-                // 检查列
                 for (int col = 0; col < gridWidth; col++)
                 {
                     for (int row = 0; row < gridHeight - 2; row++)
@@ -458,7 +602,6 @@ namespace Bejeweled
                     }
                 }
 
-                // 更新界面显示
                 if (anyMatchFound)
                 {
                     UpdateGridDisplay();
@@ -499,7 +642,6 @@ namespace Bejeweled
             return false;
         }
 
-        //private bool isEliminate;
         private void ApplyGravity()
         {
             for (int col = 0; col < gridWidth; col++)
@@ -528,7 +670,6 @@ namespace Bejeweled
                 }
             }
 
-            // 顶部空白位置生成随机宝石
             Random random = new Random();
             for (int col = 0; col < gridWidth; col++)
             {
@@ -592,7 +733,6 @@ namespace Bejeweled
 
             foreach (var button in controlsToRemove)
             {
-                // 创建动画 Timer
                 Timer animationTimer = new Timer();
                 animationTimer.Interval = interval;
                 bool isIncreasing = true;
@@ -632,7 +772,7 @@ namespace Bejeweled
                         }
                     }
                 };
-                animationTimer.Start(); // 开始动画
+                animationTimer.Start();
             }
         }
 
@@ -678,7 +818,6 @@ namespace Bejeweled
         {
             for (int i = 0; i < count; i++)
             {
-                // 从 gridPanel 中移除按钮
                 foreach (Control control in gridPanel.Controls)
                 {
                     if (control is Button button && button.Location.Y / buttonSize == startRow + i && button.Location.X / buttonSize == col)
@@ -689,7 +828,7 @@ namespace Bejeweled
                     }
                 }
 
-                grid[startRow + i, col] = null; // 标记为null，表示消除
+                grid[startRow + i, col] = null;
             }
         }
 
@@ -786,8 +925,5 @@ namespace Bejeweled
             secondClickedButton = null;
             firstx = firsty = secondx = secondy = 0;
         }
-
-
-
     }
 }
