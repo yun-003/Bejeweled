@@ -29,6 +29,7 @@ namespace Bejeweled
         private int gridWidth;
         private int padding;
         private string[,] grid = new string[8, 8];
+        private static string[] images;
 
         private bool isGameMusicStarted = false;
         private IWavePlayer waveOut;
@@ -355,9 +356,13 @@ namespace Bejeweled
 
             Random random = new Random();
             string lastImageName = null; // 用于记录上一个使用的图片名称
-            string[] images = Enumerable.Range(1, numberOfImages)
-                                          .Select(i => $"button_image{i}")
-                                          .ToArray(); // 所有图片资源名称的数组
+
+            if (images == null)
+            {
+                images = Enumerable.Range(1, numberOfImages)
+                                   .Select(i => $"button_image{i}")
+                                   .ToArray();
+            }
 
             for (int row = 0; row < gridHeight; row++)
             {
@@ -417,8 +422,8 @@ namespace Bejeweled
                         if (grid[row, col] != null && IsMatchInRow(row, col))
                         {
                             matchCount = 3;
-                            while (col + matchCount < gridWidth 
-                                && grid[row, col + matchCount] != null 
+                            while (col + matchCount < gridWidth
+                                && grid[row, col + matchCount] != null
                                 && grid[row, col] == grid[row, col + matchCount])
                             {
                                 matchCount++;
@@ -457,9 +462,112 @@ namespace Bejeweled
                 if (anyMatchFound)
                 {
                     UpdateGridDisplay();
+                    ApplyGravity();
                 }
 
             } while (anyMatchFound);
+        }
+
+        private bool CanFindMatches()
+        {
+            for (int row = 0; row < gridHeight; row++)
+            {
+                for (int col = 0; col < gridWidth - 2; col++)
+                {
+                    if (grid[row, col] != null &&
+                        grid[row, col] == grid[row, col + 1] &&
+                        grid[row, col] == grid[row, col + 2])
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            for (int col = 0; col < gridWidth; col++)
+            {
+                for (int row = 0; row < gridHeight - 2; row++)
+                {
+                    if (grid[row, col] != null &&
+                        grid[row, col] == grid[row + 1, col] &&
+                        grid[row, col] == grid[row + 2, col])
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        //private bool isEliminate;
+        private void ApplyGravity()
+        {
+            for (int col = 0; col < gridWidth; col++)
+            {
+                for (int row = gridHeight - 1; row >= 0; row--)
+                {
+                    if (grid[row, col] == null)
+                    {
+                        for (int aboveRow = row - 1; aboveRow >= 0; aboveRow--)
+                        {
+                            if (grid[aboveRow, col] != null)
+                            {
+                                grid[row, col] = grid[aboveRow, col];
+                                grid[aboveRow, col] = null;
+
+                                Button buttonToMove = gridPanel.Controls.OfType<Button>()
+                                    .FirstOrDefault(b => b.Location.Y / buttonSize == aboveRow && b.Location.X / buttonSize == col);
+                                if (buttonToMove != null)
+                                {
+                                    buttonToMove.Location = new Point(col * (buttonSize + padding), row * (buttonSize + padding));
+                                }
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 顶部空白位置生成随机宝石
+            Random random = new Random();
+            for (int col = 0; col < gridWidth; col++)
+            {
+                for (int row = 0; row < gridHeight; row++)
+                {
+                    if (grid[row, col] == null)
+                    {
+                        string resourceName = images[random.Next(images.Length)];
+                        grid[row, col] = resourceName;
+
+                        Image image = Properties.Resources.ResourceManager.GetObject(resourceName) as Image;
+
+                        Button button = new Button
+                        {
+                            Size = new Size(buttonSize, buttonSize),
+                            Location = new Point(col * (buttonSize + padding), row * (buttonSize + padding)),
+                            BackColor = Color.Transparent
+                        };
+
+                        if (image != null)
+                        {
+                            button.BackgroundImageLayout = ImageLayout.Zoom;
+                            button.BackgroundImage = image;
+                        }
+                        else
+                        {
+                            MessageBox.Show($"Resource named {resourceName} not found.", "Resource Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }
+
+                        gridPanel.Controls.Add(button);
+                        button.Click += Button_Click;
+                    }
+                }
+            }
+        }
+
+        private void PopulateGridWithButtons()
+        {
+            
         }
 
         private void AddScore(int matchCount)
@@ -551,6 +659,17 @@ namespace Bejeweled
         {
             for (int i = 0; i < count; i++)
             {
+                // 从 gridPanel 中移除按钮
+                foreach (Control control in gridPanel.Controls)
+                {
+                    if (control is Button button && button.Location.Y / buttonSize == row && button.Location.X / buttonSize == startCol + i)
+                    {
+                        gridPanel.Controls.Remove(button);
+                        button.Dispose();
+                        break;
+                    }
+                }
+
                 grid[row, startCol + i] = null; // 标记为null，表示消除
             }
         }
@@ -559,7 +678,18 @@ namespace Bejeweled
         {
             for (int i = 0; i < count; i++)
             {
-                grid[startRow + i, col] = null; // 同上
+                // 从 gridPanel 中移除按钮
+                foreach (Control control in gridPanel.Controls)
+                {
+                    if (control is Button button && button.Location.Y / buttonSize == startRow + i && button.Location.X / buttonSize == col)
+                    {
+                        gridPanel.Controls.Remove(button);
+                        button.Dispose();
+                        break;
+                    }
+                }
+
+                grid[startRow + i, col] = null; // 标记为null，表示消除
             }
         }
 
@@ -613,11 +743,9 @@ namespace Bejeweled
         {
             if (swapSteps < buttonSize / swapStep)
             {
-                // 计算每步移动的距离
                 int stepX = (secondSwapButtonOriginalLocation.X - firstSwapButtonOriginalLocation.X) / (buttonSize / swapStep);
                 int stepY = (secondSwapButtonOriginalLocation.Y - firstSwapButtonOriginalLocation.Y) / (buttonSize / swapStep);
 
-                // 移动按钮位置
                 firstSwapButton.Location = new Point(firstSwapButton.Location.X + stepX, firstSwapButton.Location.Y + stepY);
                 secondSwapButton.Location = new Point(secondSwapButton.Location.X - stepX, secondSwapButton.Location.Y - stepY);
 
@@ -628,20 +756,23 @@ namespace Bejeweled
                 firstSwapButton.Location = secondSwapButtonOriginalLocation;
                 secondSwapButton.Location = firstSwapButtonOriginalLocation;
 
-                string tempGridValue = grid[firsty, firstx];
-                grid[firsty, firstx] = grid[secondy, secondx];
-                grid[secondy, secondx] = tempGridValue;
+                string tempGridValueA = grid[firsty, firstx];
+                string tempGridValueB = grid[secondy, secondx];
 
-                CheckAndEliminateMatches();
+                grid[firsty, firstx] = tempGridValueB;
+                grid[secondy, secondx] = tempGridValueA;
 
-                if (grid[firsty, firstx] != null && grid[secondy, secondx] != null)
+                if (CanFindMatches())
                 {
+                    CheckAndEliminateMatches();
+                    ApplyGravity();
+                }
+                else
+                {
+                    grid[firsty, firstx] = tempGridValueA;
+                    grid[secondy, secondx] = tempGridValueB;
                     firstSwapButton.Location = firstSwapButtonOriginalLocation;
                     secondSwapButton.Location = secondSwapButtonOriginalLocation;
-
-                    tempGridValue = grid[firsty, firstx];
-                    grid[firsty, firstx] = grid[secondy, secondx];
-                    grid[secondy, secondx] = tempGridValue;
                 }
 
                 swapTimer.Stop();
